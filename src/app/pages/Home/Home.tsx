@@ -1,14 +1,19 @@
 import { Link, Outlet } from "react-router-dom";
 import { Item } from "../../components/Item";
+// import type { RefundInterface } from "../../interfaces/RefundInterface.tsx"
 
 export default function Home() {
+
+
+
   return (
     <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
       {/* Header */}
       <header className="w-full flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-2 text-green-700 font-semibold">
-          <span className="text-xl">↺</span>
+          <Link to={""} className="text-xl">↺
           refund
+          </Link>
         </div>
 
         <div className="flex items-center gap-6">
@@ -40,12 +45,14 @@ export default function Home() {
           <div className="border-t border-gray-100 pt-6">
             {/* Lista */}
             <div className="flex flex-col gap-6">
+
               <Item
                 name="Rodrigo"
                 category="Alimentação"
                 value="R$ 34,78"
                 icon="🍴"
               />
+              
             </div>
 
             {/* Paginação */}
@@ -54,7 +61,7 @@ export default function Home() {
                 ‹
               </button>
 
-              <span className="text-gray-600">1/3</span>
+              <span className="text-gray-600">1/1</span>
 
               <button className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600">
                 ›
