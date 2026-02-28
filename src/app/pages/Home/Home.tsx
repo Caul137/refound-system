@@ -38,7 +38,7 @@ export default function Home() {
             />
 
             <button className="bg-green-700 text-white px-4 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600">
-              🔍
+              <img src="../../../assets/MagnifyingGlass.png" alt="" className="w-6 h-6" />
             </button>
           </div>
 
@@ -58,13 +58,13 @@ export default function Home() {
             {/* Paginação */}
             <div className="flex justify-center items-center gap-4 mt-10">
               <button className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600 ">
-                ‹
+                 <img src="../../../assets/CareLeft.png" alt="" className="w-6 h-6" />
               </button>
 
               <span className="text-gray-600">1/1</span>
 
               <button className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600">
-                ›
+               <img src="../../../assets/CareRight.png" alt="" className="w-6 h-6" />
               </button>
             </div>
           </div>

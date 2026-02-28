@@ -1,7 +1,9 @@
 
 
  export interface RefundInterface {
-    name: string
     id: number;
-    value: number
+    name: string;
+    value: number;
+    category: string;
+    file: File | null;
 }
