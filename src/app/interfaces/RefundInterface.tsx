@@ -2,8 +2,8 @@
 
  export interface RefundInterface {
     id: number;
-    name: string;
+    title: string;
     value: number;
     category: string;
-    file: File | null;
+    receipt: File | null;
 }

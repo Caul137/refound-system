@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Categories } from "../../components/Categories";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -6,44 +6,60 @@ import type { RefundInterface } from "../../interfaces/RefundInterface";
 import { api } from "../../../services/api";
 
 function NewRefundRequest() {
-  const [valueMoney, setValueMoney] = useState(0);
-  const [category, setCategory] = useState("");
-  const [file, setFile] = useState<File | null>();
-  const [name, setName] = useState("");
-  
+  const [file, setFile] = useState<File | null>(null);
+  const navigate = useNavigate();
 
-  
-  const { register, handleSubmit, setValue  } = useForm<RefundInterface>({
+  const { register, handleSubmit, setValue } = useForm<RefundInterface>({
     defaultValues: {
-      name: name,
-      category: category,
-      value: valueMoney,
-      file: file,
+      title: "",
+      category: "",
+      value: 0,
+      receipt: file,
     },
   });
-  register("file");
-  
-  
-  const newRefund = (data: RefundInterface) => {
 
-    const formData = new FormData();
-
-    if(!data.name || !data.category || !data.value) {
+  const newRefund = async (data: RefundInterface) => {
+    if (!data.title || !data.category || !data.value) {
       alert("Preencha todos os campos obrigatórios");
       return;
     }
 
-    formData.append("name", data.name);
-    formData.append("category", data.category);
-    formData.append("value", String(data.value));
-    
-    if (data.file)  {
-      formData.append("file", data.file);
+    if (!data.receipt) {
+      alert("Selecione um arquivo para comprovar a despesa");
+      return;
     }
-    
-    api.post("/refunds", formData);
-   
+
+    const receiptForm = new FormData();
+    receiptForm.append("receiptFile", data.receipt);
+
+    const receiptResponse = await api.post("/receipts", receiptForm);
+
+    const receiptId = receiptResponse.data.receipt.id;
+
+    try {
+      await api.post("/refunds", {
+      title: data.title,
+      category: data.category,
+      value: Math.round(data.value * 100),
+      receipt: receiptId,
+    });
+
+    data.title = "";
+    data.category = "";
+    data.value = 0;
+    setFile(null);
+
+    navigate("/success");
+
+    } catch (error) {
+      console.log(error);
+    }
+
+
+
   };
+
+
 
   return (
     <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
@@ -56,9 +72,9 @@ function NewRefundRequest() {
         </div>
 
         <div className="flex items-center gap-6">
-          <span className="text-sm text-gray-600">
+          <Link to={"/"} className="text-sm text-gray-600">
             Solicitações de reembolso
-          </span>
+          </Link>
 
           <Link
             to={""}
@@ -91,7 +107,7 @@ function NewRefundRequest() {
 
             <input
               type="text"
-              {...register("name")}
+              {...register("title")}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-600"
             />
           </div>
@@ -105,16 +121,13 @@ function NewRefundRequest() {
 
               <select
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none bg-white focus:border-green-600 text-gray-500"
-                  {...register("category")} 
-                  defaultValue={"Selecione"}
+                {...register("category")}
+                defaultValue={"Selecione"}
               >
-                <option disabled>
-                  Selecione
-                </option>
+                <option disabled>Selecione</option>
                 {Categories.map((item) => (
                   <option key={item.id} value={item.name}>
                     {item.name}
-                    
                   </option>
                 ))}
               </select>
@@ -128,7 +141,7 @@ function NewRefundRequest() {
               <input
                 type="number"
                 placeholder="0,00"
-                {...register("value",{valueAsNumber: true})}
+                {...register("value", { valueAsNumber: true })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-600"
               />
             </div>
@@ -150,12 +163,16 @@ function NewRefundRequest() {
 
               <label className="bg-green-700 hover:bg-green-600 text-white px-4 py-2 rounded-r-lg cursor-pointer flex items-center justify-center">
                 ⤴
-                <input type="file" className="hidden" onChange={(e) => {
-                  const file = e.target.files?.[0] ?? null;
-                  setFile(file);
-                  setValue("file", file)
-                }} />
-                {}
+                <input
+                  type="file"
+                  className="hidden"
+                  {...register("receipt")}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0] ?? null;
+                    setFile(file);
+                    setValue("receipt", file);
+                  }}
+                />
               </label>
             </div>
           </div>

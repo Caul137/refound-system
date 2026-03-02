@@ -5,7 +5,7 @@ export function Item({ name, category, value, icon }: any) {
 
       <div className="flex items-center gap-4">
         <div className="w-10 h-10 rounded-full bg-[#EAF3EE] flex items-center justify-center text-lg">
-          {icon}
+           <img src={icon} alt="" className="w-6 h-6" />
         </div>
 
         <div>
