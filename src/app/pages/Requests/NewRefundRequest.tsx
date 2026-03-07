@@ -2,33 +2,20 @@ import { Link, useNavigate } from "react-router-dom";
 import { Categories } from "../../components/Categories";
 import { useState } from "react";
 import { useForm } from "react-hook-form";
-import type { RefundInterface } from "../../interfaces/RefundInterface";
 import { api } from "../../../services/api";
+import { formSchema, type RefundFormData } from "../../Schema/FormSchema";
+import { zodResolver } from "@hookform/resolvers/zod";
 
 function NewRefundRequest() {
   const [file, setFile] = useState<File | null>(null);
   const navigate = useNavigate();
 
-  const { register, handleSubmit, setValue } = useForm<RefundInterface>({
-    defaultValues: {
-      title: "",
-      category: "",
-      value: 0,
-      receipt: file,
-    },
-  });
+  const { register, handleSubmit, setValue, formState } =
+    useForm<RefundFormData>({
+      resolver: zodResolver(formSchema),
+    });
 
-  const newRefund = async (data: RefundInterface) => {
-    if (!data.title || !data.category || !data.value) {
-      alert("Preencha todos os campos obrigatórios");
-      return;
-    }
-
-    if (!data.receipt) {
-      alert("Selecione um arquivo para comprovar a despesa");
-      return;
-    }
-
+  const newRefund = async (data: RefundFormData) => {
     const receiptForm = new FormData();
     receiptForm.append("receiptFile", data.receipt);
 
@@ -38,28 +25,22 @@ function NewRefundRequest() {
 
     try {
       await api.post("/refunds", {
-      title: data.title,
-      category: data.category,
-      value: Math.round(data.value * 100),
-      receipt: receiptId,
-    });
+        title: data.title,
+        category: data.category,
+        value: Math.round(data.value * 100),
+        receipt: receiptId,
+      });
 
-    data.title = "";
-    data.category = "";
-    data.value = 0;
-    setFile(null);
+      data.title = "";
+      data.category = "";
+      data.value = 0;
+      setFile(null);
 
-    navigate("/success");
-
+      navigate("/success");
     } catch (error) {
       console.log(error);
     }
-
-
-
   };
-
-
 
   return (
     <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
@@ -111,6 +92,11 @@ function NewRefundRequest() {
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-600"
             />
           </div>
+          {formState.errors.title && (
+            <span className="text-red-500 text-sm">
+              {formState.errors.title?.message}
+            </span>
+          )}
 
           {/* Categoria e valor */}
           <div className="grid grid-cols-2 gap-4 mt-4">
@@ -124,24 +110,35 @@ function NewRefundRequest() {
                 {...register("category")}
                 defaultValue={"Selecione"}
               >
-                <option disabled>Selecione</option>
+                <option value={""}>Selecione</option>
                 {Categories.map((item) => (
                   <option key={item.id} value={item.name}>
                     {item.name}
                   </option>
                 ))}
               </select>
+               {formState.errors.category && (
+              <span className="text-red-500 text-sm">
+                {formState.errors.category.message}
+              </span>
+            )}
             </div>
-
+           
             <div>
               <label className="block text-[10px] text-gray-400 mb-1 uppercase">
                 Valor
               </label>
+              {formState.errors.value && (
+                <span className="text-red-500 text-sm">
+                  {formState.errors.value.message}
+                </span>
+              )}
 
               <input
                 type="number"
+                min={1}
                 placeholder="0,00"
-                {...register("value", { valueAsNumber: true })}
+                {...register("value", { setValueAs: (v) => (v === "" ? v = 0 : Number(v) ) })}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm outline-none focus:border-green-600"
               />
             </div>
@@ -166,16 +163,21 @@ function NewRefundRequest() {
                 <input
                   type="file"
                   className="hidden"
-                  {...register("receipt")}
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null;
+                    if (!file) return;
                     setFile(file);
-                    setValue("receipt", file);
+                    setValue("receipt", file, { shouldValidate: true });
                   }}
                 />
               </label>
             </div>
           </div>
+          {formState.errors.receipt && (
+            <span className="text-red-500 text-sm">
+              {formState.errors.receipt.message}
+            </span>
+          )}
 
           {/* Botão enviar */}
           <button

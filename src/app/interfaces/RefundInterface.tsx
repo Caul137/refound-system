@@ -7,3 +7,7 @@
     category: string;
     receipt: File | null;
 }
+
+export type RefundNormalized = RefundInterface & {
+    normalizedTitle: string;
+}
