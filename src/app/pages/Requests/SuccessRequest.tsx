@@ -1,3 +1,5 @@
+import { Link } from "react-router";
+
 export default function SuccessRequest() {
   return (
     <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
@@ -46,9 +48,9 @@ export default function SuccessRequest() {
             o setor financeiro irá entrar em contato com você.
           </p>
 
-          <button className="w-full bg-green-700 text-white py-3 rounded-lg font-medium hover:bg-green-600">
+          <Link to={"/newRefundRequest"}  className="w-full bg-green-700 text-white py-3 rounded-lg font-medium hover:bg-green-600">
             Nova solicitação
-          </button>
+          </Link>
         </div>
       </main>
     </div>

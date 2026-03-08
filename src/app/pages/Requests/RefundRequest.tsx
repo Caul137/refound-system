@@ -1,19 +1,55 @@
-import { Link } from "react-router-dom";
-import { Categories } from "../../components/Categories";
+import { Link, Navigate, useNavigate, useParams } from "react-router-dom";
+import { api } from "../../../services/api";
+import { useEffect, useState } from "react";
+import type { RefundInterface } from "../../interfaces/RefundInterface";
+import TransformToR$ from "../../components/TransformToR$";
+import type { ReceiptInterface } from "../../interfaces/ReceiptInterface";
+import ConfirmDialog from "../../components/ui/ConfirmDialog";
 
 function RefundRequest() {
+  const { id } = useParams();
+  const [user, setUser] = useState<RefundInterface>();
+  const [receipt, setReceipt] = useState<ReceiptInterface>();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    async function fetchRefund() {
+      const response = await api.get("/refunds/" + id);
+      setUser(response.data.refund as RefundInterface);
+      setReceipt(response.data.refund.receipt);
+    }
+    fetchRefund();
+  }, [id]);
+
+  const deleteRefund = async () => {
+    await api.delete("/refunds/" + id);
+    navigate("/");
+  };
+
+  const openReceipt = async () => {
+    if (!receipt?.id) return;
+
+    const response = await api.get(`/receipts/download/${receipt.id}`);
+
+    const url = response.data.url;
+
+    window.open(`${api.defaults.baseURL}${url}`, "_blank");
+  };
+
   return (
     <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
       {/* Header */}
       <header className="w-full flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-2 text-green-700 font-semibold">
-          <Link to={""} className="text-xl">
+          <Link to={"/"} className="text-xl">
             ↺ refund
           </Link>
         </div>
 
         <div className="flex items-center gap-6">
-          <span className="text-green-700">Solicitações de reembolso</span>
+          <Link to={"/"} className="text-green-700">
+            Solicitações de reembolso
+          </Link>
 
           <Link
             to="/"
@@ -42,8 +78,9 @@ function RefundRequest() {
             </label>
 
             <input
+              disabled
               type="text"
-              defaultValue="Rodrigo"
+              defaultValue={user?.title}
               className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-green-600"
             />
           </div>
@@ -56,12 +93,11 @@ function RefundRequest() {
               </label>
 
               <select
+                disabled
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none bg-white focus:border-green-600"
-                defaultValue="Alimentação"
+                defaultValue={user?.category}
               >
-                {Categories.map((item) => (
-                  <option key={item.id} value={item.name}>{item.name}</option>
-                ))}
+                <option value={user?.category}>{user?.category}</option>
               </select>
             </div>
 
@@ -70,7 +106,8 @@ function RefundRequest() {
 
               <input
                 type="text"
-                defaultValue="34,78"
+                disabled
+                defaultValue={user?.value ? TransformToR$(user.value) : ""}
                 className="w-full border border-gray-200 rounded-lg px-3 py-2 outline-none focus:border-green-600"
               />
             </div>
@@ -79,6 +116,7 @@ function RefundRequest() {
           {/* Abrir comprovante */}
           <div className="mt-6 flex justify-center">
             <button
+              onClick={openReceipt}
               type="button"
               className="flex items-center gap-2 text-green-700 text-sm font-medium hover:underline"
             >
@@ -88,9 +126,7 @@ function RefundRequest() {
           </div>
 
           {/* Botão */}
-          <button className="w-full mt-6 bg-green-700 text-white py-3 rounded-lg font-medium hover:bg-green-600">
-            Excluir
-          </button>
+          <ConfirmDialog onConfirm={deleteRefund} />
         </div>
       </main>
     </div>

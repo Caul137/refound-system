@@ -2,7 +2,10 @@ import { Link, Outlet } from "react-router-dom";
 import { Item } from "../../components/Item";
 import { api } from "../../../services/api";
 import { useEffect, useMemo, useState } from "react";
-import type { RefundInterface, RefundNormalized } from "../../interfaces/RefundInterface";
+import type {
+  RefundInterface,
+  RefundNormalized,
+} from "../../interfaces/RefundInterface";
 
 import MagnifyingGlass from "../../../assets/MagnifyingGlass.png";
 import CaretLeft from "../../../assets/CaretLeft.png";
@@ -24,7 +27,9 @@ export default function Home() {
   }, [search]);
 
   const searchRefunds = useMemo(() => {
-    return refundsMap.filter((s) => s.normalizedTitle.includes(normalizeText(debouncedSearch)));
+    return refundsMap.filter((s) =>
+      s.normalizedTitle.includes(normalizeText(debouncedSearch)),
+    );
   }, [refundsMap, debouncedSearch]);
 
   useEffect(() => {
@@ -89,12 +94,14 @@ export default function Home() {
             <div className="flex flex-col gap-6">
               {searchRefunds.map((r: RefundNormalized) => (
                 <div key={r.id}>
-                  <Item
-                    name={r.normalizedTitle}
-                    category={r.category}
-                    value={TransformToR$(r.value)}
-                    icon={CategoryToImage(r.category)}
-                  />
+                  <Link to={`/refunds/${r.id}`}>
+                    <Item
+                      name={r.normalizedTitle}
+                      category={r.category}
+                      value={TransformToR$(r.value)}
+                      icon={CategoryToImage(r.category)}
+                    />
+                  </Link>
                 </div>
               ))}
             </div>
