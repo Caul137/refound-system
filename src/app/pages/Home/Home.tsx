@@ -13,11 +13,17 @@ import CaretRight from "../../../assets/CaretRight.png";
 import { CategoryToImage } from "../../components/CategoryToImage";
 import { normalizeText } from "../../components/CleanSearchText";
 import TransformToR$ from "../../components/TransformToR$";
+import { useSearchParams } from "react-router-dom";
 
 export default function Home() {
   const [refundsMap, setRefundsMap] = useState<RefundNormalized[]>([]);
   const [search, setSearch] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>(search);
+  const [page, setPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const pageParam = Number(searchParams.get("page")) || 1;
 
   useEffect(() => {
     const time = setTimeout(() => {
@@ -26,15 +32,21 @@ export default function Home() {
     return () => clearTimeout(time);
   }, [search]);
 
+
+  const normalizedSearch = normalizeText(debouncedSearch);
   const searchRefunds = useMemo(() => {
     return refundsMap.filter((s) =>
-      s.normalizedTitle.includes(normalizeText(debouncedSearch)),
+      s.normalizedTitle.includes(normalizedSearch),
     );
-  }, [refundsMap, debouncedSearch]);
+  }, [refundsMap, normalizedSearch]);
 
   useEffect(() => {
     async function fetchRefunds() {
-      const response = await api.get("/refunds");
+      const response = await api.get(`/refunds`, {
+        params: {
+          page: page,
+        },
+      });
 
       const normalize = response.data.refunds.data.map(
         (refund: RefundInterface) => ({
@@ -44,12 +56,13 @@ export default function Home() {
       );
 
       setRefundsMap(normalize);
+      setTotalPages(response.data.refunds.meta.lastPage);
     }
     fetchRefunds();
-  }, []);
+  }, [page]);
 
   return (
-    <div className="w-screen h-screen bg-[#EEF3F0] flex flex-col">
+    <div className="w-screen min-h-screen  bg-[#EEF3F0] flex flex-col">
       {/* Header */}
       <header className="w-full flex items-center justify-between px-10 py-6">
         <div className="flex items-center gap-2 text-green-700 font-semibold">
@@ -70,8 +83,8 @@ export default function Home() {
       </header>
       <Outlet />
       {/* Card */}
-      <main className="flex-1 flex justify-center items-start px-10">
-        <div className="w-full max-w-6xl bg-white rounded-2xl px-10 py-8 shadow-sm">
+      <main className="flex-1 flex justify-center items-start px-10 pb-10">
+        <div className="w-full h-auto max-w-6xl bg-white rounded-2xl px-10 py-8 shadow-sm">
           <h2 className="text-xl font-semibold mb-6">Solicitações</h2>
 
           {/* Search */}
@@ -96,7 +109,7 @@ export default function Home() {
                 <div key={r.id}>
                   <Link to={`/refunds/${r.id}`}>
                     <Item
-                      name={r.normalizedTitle}
+                      name={r.title}
                       category={r.category}
                       value={TransformToR$(r.value)}
                       icon={CategoryToImage(r.category)}
@@ -108,13 +121,21 @@ export default function Home() {
 
             {/* Paginação */}
             <div className="flex justify-center items-center gap-4 mt-10">
-              <button className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600 ">
+              <button
+                onClick={() => [page > 1 && setPage(page - 1), setSearchParams({ page: String(page - 1) })]}
+                className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600 "
+              >
                 <img src={CaretLeft} alt="" className="w-6 h-6" />
               </button>
 
-              <span className="text-gray-600">1/1</span>
+              <span className="text-gray-600">
+                {page}/{totalPages}
+              </span>
 
-              <button className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600">
+              <button
+                onClick={() =>[ page < totalPages && setPage(page + 1),  setSearchParams({ page: String(page + 1) })]}
+                className="bg-green-700 text-white w-10 h-10 rounded-lg flex items-center justify-center cursor-pointer hover:bg-green-600"
+              >
                 <img src={CaretRight} alt="" className="w-6 h-6 " />
               </button>
             </div>
